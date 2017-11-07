@@ -51,7 +51,7 @@ from .layers import PhyloConv1D, euclidean_distances
 from keras.utils.np_utils import to_categorical
 
 
-def get_raw_data(tcga_path, kop_k):
+def get_raw_data(tcga_path, top_k=None):
 
     tcga = pd.read_csv(tcga_path, sep="\t", header=[0,1,2], index_col=0)
     patients = tcga.T.reset_index()
@@ -64,20 +64,23 @@ def get_raw_data(tcga_path, kop_k):
     pat_tissue = patients.values[:,0] 
     tcga_X,tcga_Y = GenerateXY(patients,pat_tissue)
     
-    gene_selector = SelectKBest(score_func=chi2, k=kop_k)
-    X_train, X_test, Y_train, Y_test = train_test_split(tcga_X, tcga_Y, test_size=0.33, random_state=42)
-    X_train = gene_selector.fit_transform(X_train,Y_train)
-    X_test = gene_selector.transform(X_test)
-    
-    
-    scores_chi2 = gene_selector.scores_
-    if (scores_chi2[0]>scores_chi2[-1]):
-        top_inds_to_use = np.argsort(scores_chi2)[:kop_k] 
+    if top_k == None:
+        X_train, X_test, Y_train, Y_test = train_test_split(tcga_X, tcga_Y, test_size=0.33, random_state=42) 
+        return X_train,X_test,Y_train,Y_test
     else:
-        top_inds_to_use = np.argsort(scores_chi2)[-kop_k:]
-    np.save('chi2_chosen_genes', top_inds_to_use)
-      
-    return X_train,X_test,Y_train,Y_test
+        gene_selector = SelectKBest(score_func=chi2, k=top_k)
+        X_train, X_test, Y_train, Y_test = train_test_split(tcga_X, tcga_Y, test_size=0.33, random_state=42)
+        X_train = gene_selector.fit_transform(X_train,Y_train)
+        X_test = gene_selector.transform(X_test)
+        
+        scores_chi2 = gene_selector.scores_
+        if (scores_chi2[0]>scores_chi2[-1]):
+            top_inds_to_use = np.argsort(scores_chi2)[:kop_k] 
+        else:
+            top_inds_to_use = np.argsort(scores_chi2)[-kop_k:]
+        np.save('chi2_chosen_genes', top_inds_to_use)
+
+        return X_train,X_test,Y_train,Y_test
 
 
 def GenerateXY(patients,pat_tissue):
@@ -95,12 +98,16 @@ def GenerateXY(patients,pat_tissue):
     return tcga_X,tcga_Y
 
 def mds_load_reshape(path, batch_size):
-    MDSmat = pd.read_csv(path, index_col= 0).as_matrix().T
+    if path == '/home/sakalouski/TAD_Trento/distance matrices/MDSes/distance_mat_100iter_False_feats_100feats_subset_ALL_MDS.csv':
+        MDSmat = pd.read_csv(path, index_col= 0).as_matrix().T
+    else:
+        MDSmat = pd.read_csv(path, header = None).as_matrix().T
     MDSmat = MDSmat.reshape(1,MDSmat.shape[0],MDSmat.shape[1],1)
     #print(MDSmat.shape)
     tmp = np.zeros((batch_size,MDSmat.shape[1],MDSmat.shape[2],1),float)
     tmp[:,:,:,:] = MDSmat
     MDSmat = tmp
+    #print(MDSmat.shape)    
     return MDSmat
 
 def get_class_weights(Y):
@@ -116,7 +123,30 @@ def to_1d_labels(Y):
         res[i] = np.argmax(Y[i,:])
     return res
 
-def create_model(X_train, MDSmat, nb_filters, nb_neighbors):
+
+def create_dense_model(X_train, MDSmat, nb_filters, nb_neighbors, opt = None):
+    
+    nb_features = X_train.shape[1]
+
+    data = Input(shape=(nb_features, 1))
+    dense_layer = Flatten()(data)
+    dense_layer = Dense(int(8), activation='selu')(dense_layer)
+    dense_layer = BatchNormalization()(dense_layer)
+    dense_layer = Dropout(0.5)(dense_layer)
+
+    output = Dense(units=12, activation="softmax", name='output')(dense_layer)
+
+    model = Model(inputs = data, outputs = output)
+    from keras import optimizers
+    if opt == None:
+         opt = 'Adam'
+    else:
+        opt = optimizers.SGD()
+    model.compile(optimizer=opt, loss='categorical_crossentropy')
+    return model
+
+
+def create_model(X_train, MDSmat, nb_filters, nb_neighbors,opt = None):
     
     nb_features = X_train.shape[1]
     nb_coordinates = MDSmat.shape[1]
@@ -132,48 +162,50 @@ def create_model(X_train, MDSmat, nb_filters, nb_neighbors):
     distances = euclidean_distances(conv_crd)
     conv_layer, conv_crd = PhyloConv1D(distances, nb_neighbors,
                                        nb_filters, activation='selu')([conv_layer, conv_crd])
-    distances = euclidean_distances(conv_crd)
-    conv_layer, conv_crd = PhyloConv1D(distances, nb_neighbors,
-                                       nb_filters, activation='selu')([conv_layer, conv_crd])
-    max = MaxPooling1D(pool_size=2, padding="valid")(conv_layer)
-    flatt = Flatten()(max)
-    #flatt = Dense(128, activation='relu')(flatt)
-    #flatt = BatchNormalization()(flatt)
-    drop = Dropout(0.25)(Dense(units=64, activation='relu')(flatt))
+    #max = MaxPooling1D(pool_size=2, padding="valid")(conv_layer)
+    flatt = Flatten()(conv_layer)
+    drop = Dropout(0.5)(flatt)
+    drop = Dense(units=128, activation='selu')(drop)
+    drop = BatchNormalization()(drop)
+    drop = Dropout(0.5)(drop)
     output = Dense(units=12, activation="softmax", name='output')(drop)
 
     model = Model(inputs=[data, coordinates], outputs=output)
-
-
-    EarlStop = EarlyStopping(monitor='val_loss', min_delta=0, patience=7, verbose=2, mode='auto')
-    checkpointer = ModelCheckpoint(filepath="model_ALL_1_iter_5_feats_top2k.hdf5", 
-                                                     verbose=2, save_best_only=True)
-    reduce_lr = ReduceLROnPlateau(monitor='val_loss', 
-                              factor=0.5, patience=3, 
-                              min_lr=1e-16, verbose=2)
-
-    model.compile(optimizer='Adam', loss='categorical_crossentropy')
+    from keras import optimizers
+    if opt == None:
+         opt = 'Adam'
+    else:
+        opt = optimizers.SGD()
+    model.compile(optimizer=opt, loss='categorical_crossentropy')
+    
     return model
 
-def train_model(model, X_train_inp, Y_input_train, batch_size, pat_lr,pat_max, model_name):
+def train_model(model, X_train_inp, Y_input_train, batch_size, pat_lr,pat_max, model_name, MDSmat, dense = None):
     weights = get_class_weights(Y_input_train)
     pat = 0
+    pat_lr_it = 0
     loss_prev = -1 
     lr = 5e-4
+    lr_decr_mult = 0.5
     loss = 0.0
+    losses = []
     while (1 != 2):
         for i in range(0,int(X_train_inp.shape[0]/batch_size)):
-            X = [X_train_inp[i*batch_size:(i+1)*batch_size],MDSmat]
-            Y = Y_input_train[i*batch_size:(i+1)*batch_size]
+            if dense == True:
+                X = X_train_inp[i*batch_size:(i+1)*batch_size,:,[0]]
+            else:
+                X = [X_train_inp[i*batch_size:(i+1)*batch_size,:],MDSmat]
+            Y = Y_input_train[i*batch_size:(i+1)*batch_size,:]
             history = model.fit(x=X, y=Y, 
-                          epochs = 1, 
-                          class_weight = weights,
-                          batch_size = batch_size, 
-                          verbose=0, 
-                          validation_split = 0.3,
-                          shuffle=True) 
+                              epochs = 1, 
+                              class_weight = weights,
+                              batch_size = batch_size, 
+                              verbose=0, 
+                              validation_split = 0.3,
+                              shuffle=True) 
             loss += float(history.history['val_loss'][0])
         loss /= float(X_train_inp.shape[0]/batch_size)
+        losses.append(loss)
         print("Current loss is: ", loss)
         if loss_prev == -1:        
             loss_prev = loss
@@ -182,21 +214,24 @@ def train_model(model, X_train_inp, Y_input_train, batch_size, pat_lr,pat_max, m
             continue
         if loss >= loss_prev:
             pat += 1
+            pat_lr_it += 1
             #model.load_weights(model_name)
-            if pat > pat_lr:
-                lr = lr*0.65
+            if pat_lr_it > pat_lr:
+                lr = lr*lr_decr_mult
                 #model.load_weights(model_name)
                 K.set_value(model.optimizer.lr, lr)
                 print("New LR is: ", float(K.get_value(model.optimizer.lr)))
-                pat_lr = 0
+                pat_lr_it = 0
             if pat > pat_max:
                 #model.save(model_name) 
                 #print("Model Saved as: "+model_name)
                 break
         else:
             pat = 0
+            pat_lr_it = 0
             loss_prev = loss
             model.save_weights(model_name) 
             print("Model Saved as: "+model_name)
     model.load_weights(model_name)
+    np.save('losses'+model_name,np.asarray(losses))
     return model
