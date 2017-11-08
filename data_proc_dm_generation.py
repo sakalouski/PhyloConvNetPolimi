@@ -19,6 +19,10 @@ from sklearn.svm import SVC
 from sklearn.tree import DecisionTreeClassifier
 
 
+#-------------------------------------------------------------------------------------------------------------------------------------
+# THE FIRST PART CONTAINS FUNCTIONS NECESSARY FOR DATA PREPROCESSING AND THE DISTANCE MATRICE GENERATION
+#-------------------------------------------------------------------------------------------------------------------------------------
+
 
 def get_raw_data(tcga_path, top_k, tads = True):
     '''
@@ -179,12 +183,17 @@ def cluster_generator_wrapper_subsets(tcga_X, tcga_Y, num_iters, subset_size, k_
         k_top - number of genes chosen for the whole process
         tads - boolean, identifies if we work with all the genes or only included into tads
     output:
-        all the output is saved to files on each step        
+        out_scores - list of floats. scores for all the clusters
+        out_ranks - list of lists. ranks of features inside the clusters
+        out_inds - list of lists. indices for each cluster      
     '''
     list_of_genes = list(range(0,tcga_X.shape[1]))
     
-    init_files(num_iters,subset_size,k_top,tads)
+    out_scores = []
+    out_ranks = []
+    out_inds = []
     
+    init_files(num_iters,subset_size,k_top,tads)    
     step = subset_size
     it = 0
     while(len(list_of_genes)>=step):
@@ -199,15 +208,25 @@ def cluster_generator_wrapper_subsets(tcga_X, tcga_Y, num_iters, subset_size, k_
             scores[i], importance[i,:] = run_classifier(masked_X,tcga_Y)
         sorted_scores_inds = np.argsort(subset_inds,axis = 1)
         sorted_scores = np.argsort(scores)
-        write_to_file(scores[sorted_scores[-1]], importance[sorted_scores[-1],:], 
-                      subset_inds[sorted_scores[-1],:], subset_size, num_iters,k_top)   
+        
+        out_scores.append(scores[sorted_scores[-1]])
+        out_ranks.append(list(importance[sorted_scores[-1],:]))
+        out_inds.append(list(subset_inds[sorted_scores[-1],:]))
+
+        #write_to_file(scores[sorted_scores[-1]], importance[sorted_scores[-1],:], 
+        #              subset_inds[sorted_scores[-1],:], subset_size, num_iters,k_top)   
         list_of_genes = list(set(list_of_genes)-set(list(subset_inds[sorted_scores[-1],:])))
     if (len(list_of_genes) == 0):
-        return
+        return out_scores, out_ranks, out_inds
     masked_X = tcga_X[:,list_of_genes]
     score_rest, importance_rest = run_classifier(masked_X,tcga_Y)
-    write_to_file(score_rest, importance_rest, list_of_genes,subset_size, num_iters,k_top)
-    return
+    
+    out_scores.append(score_rest)
+    out_ranks.append(list(importance_rest))
+    out_inds.append(list(list_of_genes))
+    
+    #write_to_file(score_rest, importance_rest, list_of_genes,subset_size, num_iters,k_top)
+    return out_scores, out_ranks, out_inds
 
 
 
