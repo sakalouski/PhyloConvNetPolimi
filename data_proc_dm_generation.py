@@ -110,7 +110,7 @@ def run_classifier(X,Y):
 
 def write_to_file(score, rank, index, subset_size, num_iters,k_top,tads = True):
     '''
-    Writes all the generated feature subsets to files together with the scores step-by-step. designed for higher iteration numbers to prevent any result losses. The process of saving and loading in very end of operation is applied by default - no alternative is implemented for now. This part of the code is stable and double-checked. 
+    Writes all the generated feature subsets to files together with the scores step-by-step. designed for higher iteration numbers to prevent any result losses. The function is not used in the current implementation.
     
     input:
         score - float. Score of a current cluster
@@ -155,7 +155,7 @@ def index_generator(index_num, list_of_gene_indx):
 
 def init_files(num_iters,subset_size,k_top,tads = True):
     '''
-    creates fresh files for the distance matrice generation process
+    creates fresh files for the distance matrice generation process. The function is not used in the current implementation.
     input:
         used only for naming files
     '''
@@ -232,7 +232,7 @@ def cluster_generator_wrapper_subsets(tcga_X, tcga_Y, num_iters, subset_size, k_
 
 def subset_scores_load(num_iters, subset_size,k_top,tads = True):
     '''
-    Loading all the scores and clusters from the saved step-by-step files. Ugly way, will be implemented properly in the future.
+    Loading all the scores and clusters from the saved step-by-step files. The function is not used in the current implementation.
     
     input:
         subset_size - integer, size of the cluster
