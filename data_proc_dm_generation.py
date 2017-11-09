@@ -42,7 +42,9 @@ def get_raw_data(tcga_path, top_k, tads = True):
                                         'level_2': 'patient_id'})
     patients.index.name = "patient"
     #gene_names = tcga.index.tolist()
-    tcga_X,tcga_Y = GenerateXY(patients)
+    pat_tissue = np.array(patients.values[:,0],str)
+    pat_tissue = patients.values[:,0] 
+    tcga_X,tcga_Y = GenerateXY(patients, pat_tissue)
     
     if top_k == None:
         X_train, X_test, Y_train, Y_test = train_test_split(tcga_X, tcga_Y, test_size=0.33, random_state=42) 
@@ -55,15 +57,15 @@ def get_raw_data(tcga_path, top_k, tads = True):
         
         scores_chi2 = gene_selector.scores_
         if (scores_chi2[0]>scores_chi2[-1]):
-            top_inds_to_use = np.argsort(scores_chi2)[:kop_k] 
+            top_inds_to_use = np.argsort(scores_chi2)[:top_k] 
         else:
-            top_inds_to_use = np.argsort(scores_chi2)[-kop_k:]
+            top_inds_to_use = np.argsort(scores_chi2)[-top_k:]
         np.save('chi2_chosen_genes', top_inds_to_use)
 
         return X_train,X_test,Y_train,Y_test
 
 
-def GenerateXY(patients):
+def GenerateXY(patients, pat_tissue):
     '''
     the function takes all the str labels, which are cancer types and creates 1d Y array made of integer labels
     
