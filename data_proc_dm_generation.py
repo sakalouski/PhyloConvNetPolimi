@@ -2,7 +2,8 @@ import pandas as pd
 import numpy as np
 import gmql as gl
 import random
-
+import os
+import sys
 from sklearn.decomposition import PCA
 from sklearn.preprocessing import StandardScaler,MinMaxScaler
 from sklearn.metrics import confusion_matrix
@@ -26,11 +27,12 @@ from sklearn.tree import DecisionTreeClassifier
 
 def get_raw_data(tcga_path, top_k, tads = True):
     '''
-    the function addresses the data at "tcga_path" and processes it creating features and labels. Concretely: it transforms the str labels into integers and splits the data into training and test sets. 
+    the function addresses the data at "tcga_path" and processes it creating features and labels. 
+    Concretely: it transforms the str labels into integers and splits the data into training and test sets. 
     
     input: 
         tcga_path - string, contains the path to the dataset
-        top_k - integer, number of features to be chosen with sklearn SelectKBest routine
+        top_k - integer, number of features to be chosen with sklearn SelectKBest routine.
         tads - boolean, indicates if we work only with genes included into tads or the whole set of genes 
     output:
         X_train,X_test,Y_train,Y_test
@@ -60,7 +62,7 @@ def get_raw_data(tcga_path, top_k, tads = True):
             top_inds_to_use = np.argsort(scores_chi2)[:top_k] 
         else:
             top_inds_to_use = np.argsort(scores_chi2)[-top_k:]
-        np.save('chi2_chosen_genes', top_inds_to_use)
+        #np.save('chi2_chosen_genes', top_inds_to_use)
 
         return X_train,X_test,Y_train,Y_test
 
@@ -92,7 +94,8 @@ def GenerateXY(patients, pat_tissue):
 
 def run_classifier(X,Y):
     '''
-    the input is a subset of features. The classifier is created and the score on a cv dataset is obtained. the scores are used for building a distance matrice.
+    the input is a subset of features. The classifier is created and the score on a cv dataset is obtained. 
+    the scores are used for building a distance matrice.
     
     input:
         X - numpy array 2d, features
@@ -109,10 +112,11 @@ def run_classifier(X,Y):
     score = f1_score(Y_test, Y_pred, average = 'macro')
     importance = classy.feature_importances_
     return score, importance
-
+'''
 def write_to_file(score, rank, index, subset_size, num_iters,k_top,tads = True):
-    '''
-    Writes all the generated feature subsets to files together with the scores step-by-step. designed for higher iteration numbers to prevent any result losses. The function is not used in the current implementation.
+
+    Writes all the generated feature subsets to files together with the scores step-by-step. 
+    designed for higher iteration numbers to prevent any result losses. The function is not used in the current implementation.
     
     input:
         score - float. Score of a current cluster
@@ -122,7 +126,7 @@ def write_to_file(score, rank, index, subset_size, num_iters,k_top,tads = True):
         num_iters - integer, number of attepts to get the optimal cluster for the considered set of features
         k_top - number of genes chosen for the whole process
         tads - boolean, identifies if we work with all the genes or only included into tads 
-    '''
+
     if tads == True:
         snippet = '_from_tads_'
     else:
@@ -140,7 +144,7 @@ def write_to_file(score, rank, index, subset_size, num_iters,k_top,tads = True):
     np.savetxt(f_handle, rank, fmt = '%.5f', delimiter=',')
     f_handle.close()
 
-    
+'''    
 def index_generator(index_num, list_of_gene_indx):
     '''
     chooses a subset of features (from the list of indexes - list_of_gene_indx) of the index_num size 
@@ -154,13 +158,13 @@ def index_generator(index_num, list_of_gene_indx):
     res = list(list_of_gene_indx[:index_num])
     return res
 
-
+'''
 def init_files(num_iters,subset_size,k_top,tads = True):
-    '''
+
     creates fresh files for the distance matrice generation process. The function is not used in the current implementation.
     input:
         used only for naming files
-    '''
+
     if tads == True:
         snippet = '_from_tads_'
     else:
@@ -171,11 +175,13 @@ def init_files(num_iters,subset_size,k_top,tads = True):
     f_handle.close()
     f_handle = open('ranks_chosen_'+str(k_top)+snippet+str(subset_size)+'__'+str(num_iters)+'.dat', 'w')
     f_handle.close()
-
+'''
     
 def cluster_generator_wrapper_subsets(tcga_X, tcga_Y, num_iters, subset_size, k_top, tads = True):
     '''
-    the whole process of dividing the features set into clusters and assigning scores to them is implemented here. num_iters clusters are randomly generated from the whole set of features, the optimal one (with the highest score) is takem. The chosen features are subtracted from the whole set of features which is addressed on the next step for next num_iters iterations. 
+    the whole process of dividing the features set into clusters and assigning scores to them is implemented here. 
+    num_iters clusters are randomly generated from the whole set of features, the optimal one (with the highest score) is takem. 
+    The chosen features are subtracted from the whole set of features which is addressed on the next step for next num_iters iterations. 
     
     input: 
         tcga_X - np array 2d. features. only training on input!
@@ -195,7 +201,6 @@ def cluster_generator_wrapper_subsets(tcga_X, tcga_Y, num_iters, subset_size, k_
     out_ranks = []
     out_inds = []
     
-    init_files(num_iters,subset_size,k_top,tads)    
     step = subset_size
     it = 0
     while(len(list_of_genes)>=step):
@@ -231,9 +236,9 @@ def cluster_generator_wrapper_subsets(tcga_X, tcga_Y, num_iters, subset_size, k_
     return out_scores, out_ranks, out_inds
 
 
-
+'''
 def subset_scores_load(num_iters, subset_size,k_top,tads = True):
-    '''
+
     Loading all the scores and clusters from the saved step-by-step files. The function is not used in the current implementation.
     
     input:
@@ -245,7 +250,7 @@ def subset_scores_load(num_iters, subset_size,k_top,tads = True):
         scores - np array 1d. scores for each cluster
         ranks - np array 2d. ranks of all the features inside each cluster
         inds - np array 2d. indices of features for each cluster
-    '''
+
     if tads == True:
         snippet = '_from_tads_'
     else:
@@ -296,20 +301,22 @@ def subset_scores_load(num_iters, subset_size,k_top,tads = True):
     if(len(scores)>len(inds)):
         inds.append(i_t)
     return scores, ranks, inds
-
+'''
+    
 def get_distance_matrix(scores,indexes,ranks,num_feats):
     
     '''
-    Distances are generated as differences of performances between the clusters. The inside-cluster distances are obtained from feature_importance parameter of Decision Tree. The inter-cluster distances are scaled to be at least 2 times bigger than any intra-cluster distance.  
+    Distances are generated as differences of performances between the clusters. 
+    The inside-cluster distances are obtained from feature_importance parameter of Decision Tree. 
+    The inter-cluster distances are scaled to be at least 2 times bigger than any intra-cluster distance.  
     input:
         scores - np array 1d. scores for each cluster
         ranks - np array 2d. ranks of all the features inside each cluster
         inds - np array 2d. indices of features for each cluster
-        num_feats - integer. number of features in cluster
+        num_feats - integer. number of features in the dataset. Do not pass NONE here!
     output:
         dist_final - 2d array. distance matrice constructed of intracluster and intercluster distances.
     '''
-    
     dist_inner = np.zeros((num_feats,num_feats),float)
     dist_clust = np.zeros((num_feats,num_feats),float)
     dist_final = np.zeros((num_feats,num_feats),float)
@@ -398,11 +405,32 @@ def check_preservation_of_dims(MDSres, dist_input, subset_size):
 #-------------------------------------------------------------------------------------------------------------------------------------
 # NEXT PART CONTAINS FUNCTIONS NECESSARY FOR THE SECOND PART OF THE PIPELINE - BUILING THE NETWORK AND EVALUATING ITS PROPERTIES
 #-------------------------------------------------------------------------------------------------------------------------------------
+from keras import backend as K
+import tensorflow as tf
+config = tf.ConfigProto(device_count = {'CPU': 1}, intra_op_parallelism_threads=7, inter_op_parallelism_threads=1)
+session = tf.Session(config=config)
+K.set_session(session)
 
+import keras as k
+import keras
+from keras import applications
+from keras.models import Sequential
+from keras.layers import Dropout, Flatten, Dense, BatchNormalization
+from keras.optimizers import RMSprop, Adam, SGD, Nadam
+from keras.callbacks import ModelCheckpoint, ReduceLROnPlateau, EarlyStopping
+from keras.models import Model
+from keras.layers import Input
 
+module_path = os.path.abspath(os.path.join('..'))
+if module_path not in sys.path:
+    sys.path.append(module_path)
 
-
-
+from keras.layers import (Lambda, MaxPooling1D, Flatten,
+                          Dropout, Dense, Input)
+from keras.models import Model
+from keras.backend import floatx
+from phcnn.layers import PhyloConv1D, euclidean_distances
+from keras.utils.np_utils import to_categorical
 
 
 def mds_reshape(MDSmat, batch_size):
@@ -530,7 +558,9 @@ def create_model(X_train, Y_train, MDSmat, nb_filters, nb_neighbors,opt = None):
 
 def train_model(model, X_train_inp, Y_input_train, batch_size, pat_lr, pat_max, model_name, MDSmat, dense = None):
     '''
-    The model is trained batch by batch. Checking of the losses and decrease of the learning rate is done manually. The labels are not balanced inside of the training batches at all, rather the opposite is true. There were two ways of doing training - either train_on_batch or fit with one epoch. The latter one was chosen for the beginning as the implementation is simplier. 
+    The model is trained batch by batch. Checking of the losses and decrease of the learning rate is done manually. 
+    The labels are not balanced inside of the training batches at all, rather the opposite is true. 
+    There were two ways of doing training - either train_on_batch or fit with one epoch. The latter one was chosen for the beginning as the implementation is simplier. 
     
     input:
         model - compiled model to be trained
@@ -548,11 +578,13 @@ def train_model(model, X_train_inp, Y_input_train, batch_size, pat_lr, pat_max, 
     weights = get_class_weights(Y_input_train)
     pat = 0
     pat_lr_it = 0
-    loss_prev = -1 
+    val_loss_prev = -1 
     lr = 5e-4
     lr_decr_mult = 0.5
-    loss = 0.0
-    losses = []
+    val_loss = 0.0
+    train_loss = 0.0
+    val_losses = []
+    train_losses = []
     while (1 != 2):
         for i in range(0,int(X_train_inp.shape[0]/batch_size)):
             if dense == True:
@@ -567,16 +599,20 @@ def train_model(model, X_train_inp, Y_input_train, batch_size, pat_lr, pat_max, 
                               verbose=0, 
                               validation_split = 0.3,
                               shuffle=True) 
-            loss += float(history.history['val_loss'][0])
-        loss /= float(X_train_inp.shape[0]/batch_size)
-        losses.append(loss)
-        print("Current loss is: ", loss)
-        if loss_prev == -1:        
-            loss_prev = loss
-            model.save_weights(model_name) 
+            val_loss += float(history.history['val_loss'][0])
+            train_loss += float(history.history['loss'][0])
+        val_loss /= float(X_train_inp.shape[0]/batch_size)
+        val_losses.append(val_loss)
+        train_loss /= float(X_train_inp.shape[0]/batch_size)
+        train_losses.append(train_loss)
+        print("Current val_loss is: ", val_loss)
+        print("Current train_loss is: ", train_loss)
+        if val_loss_prev == -1:        
+            val_loss_prev = val_loss
+            model.save_weights(model_name+'.h5') 
             print("Model Saved as: "+model_name)
             continue
-        if loss >= loss_prev:
+        if val_loss >= val_loss_prev:
             pat += 1
             pat_lr_it += 1
             #model.load_weights(model_name)
@@ -593,9 +629,10 @@ def train_model(model, X_train_inp, Y_input_train, batch_size, pat_lr, pat_max, 
         else:
             pat = 0
             pat_lr_it = 0
-            loss_prev = loss
-            model.save_weights(model_name) 
+            val_loss_prev = val_loss
+            model.save_weights(model_name+'.h5') 
             print("Model Saved as: "+model_name)
-    model.load_weights(model_name)
-    np.save('losses'+model_name,np.asarray(losses))
+    model.load_weights(model_name+'.h5')
+    np.save('val_loss_'+model_name,np.asarray(val_losses))
+    np.save('train_loss_'+model_name,np.asarray(train_losses))
     return model
