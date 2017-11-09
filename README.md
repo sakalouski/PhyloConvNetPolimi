@@ -12,9 +12,14 @@ Experiment 1:
     3. *Architecture*: like the public repository of PhyloCNN / 2-layer fully connected network - from the function "create_dense_model"
     4. *Result*: up to 0.78 F1-score for all the tries, where the worst variants were untrainable at all (<0.3 f1 score)
 
-    
+# Progressing:
+
+1. Train the network for the TADs distance matrice for all the genes, which are assigned to any tad. 
+2. Train same set of genes as in 1., but with performance, 1 iteration distance matrice.
+
 # To do list:
 
-1. Train the network for the TADs distance matrice (is being trained)
-2. Train same set of genes as in 1., but with performance, 1 iteration distance matrice (the distance matrice is being obtained) 
-3. Run training for 2k features in order to provide some loss plot - done
+1. Control the training batches
+2. Do classes balancing
+3. Change the decision trees to Random Forests
+
