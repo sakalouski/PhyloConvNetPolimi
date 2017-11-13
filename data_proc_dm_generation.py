@@ -64,7 +64,7 @@ def get_raw_data(tcga_path, top_k, tads = True):
             top_inds_to_use = np.argsort(scores_chi2)[-top_k:]
         #np.save('chi2_chosen_genes', top_inds_to_use)
 
-        return X_train,X_test,Y_train,Y_test
+        return X_train,X_test,Y_train,Y_test,top_inds_to_use
 
 
 def GenerateXY(patients, pat_tissue):
@@ -90,6 +90,41 @@ def GenerateXY(patients, pat_tissue):
             tcga_Y[i] = list_of_tissues.index(e)
 
     return tcga_X,tcga_Y
+
+def upsampling(X,Y):
+    '''
+    the input is X and Y - features and labels, 2d arrays. The upsampling is made. 
+    
+    input:
+        X - numpy array 3d, features
+        Y - numpy array 2d, categorical labels
+    output:
+        X_upsampled - numpy array 3d, features
+        Y_upsampled - numpy array 2d, categorical labels
+    ''' 
+    num_of_classes = Y.shape[1]
+    sample_in_class_num = np.zeros(num_of_classes,int)
+    for i in range(0,num_of_classes):
+        sample_in_class_num[i] = np.count_nonzero(Y[:,i])
+    upsample_to = np.amax(sample_in_class_num)
+    
+    X_upsampled = np.zeros((upsample_to * num_of_classes,X.shape[1],1), float)
+    Y_upsampled = np.zeros((upsample_to * num_of_classes,Y.shape[1]), int)
+    
+    X_upsampled[:X.shape[0],:,:] = X
+    Y_upsampled[:Y.shape[0],:] = Y
+    
+    
+    itt = 1
+    for i in range(0,num_of_classes):
+        while (sample_in_class_num[i] < upsample_to and sample_in_class_num[i] != 0):
+            Y_upsampled[Y.shape[0]+itt,i] = 1
+            X_to_choose = X[Y[:,i] != 0,:,:]
+            ran = np.random.randint(0, X_to_choose.shape[0])
+            X_upsampled[X.shape[0]+itt,:,:] = X_to_choose[ran,:,:]
+            sample_in_class_num[i] = np.count_nonzero(Y_upsampled[:,i])
+            itt += 1
+    return X_upsampled, Y_upsampled
 
 
 def run_classifier(X,Y):
@@ -405,6 +440,12 @@ def check_preservation_of_dims(MDSres, dist_input, subset_size):
 #-------------------------------------------------------------------------------------------------------------------------------------
 # NEXT PART CONTAINS FUNCTIONS NECESSARY FOR THE SECOND PART OF THE PIPELINE - BUILING THE NETWORK AND EVALUATING ITS PROPERTIES
 #-------------------------------------------------------------------------------------------------------------------------------------
+
+
+
+
+
+
 from keras import backend as K
 import tensorflow as tf
 config = tf.ConfigProto(device_count = {'CPU': 1}, intra_op_parallelism_threads=7, inter_op_parallelism_threads=1)
@@ -586,6 +627,8 @@ def train_model(model, X_train_inp, Y_input_train, batch_size, pat_lr, pat_max, 
     val_losses = []
     train_losses = []
     while (1 != 2):
+        val_loss = 0.0
+        train_loss = 0.0
         for i in range(0,int(X_train_inp.shape[0]/batch_size)):
             if dense == True:
                 X = X_train_inp[i*batch_size:(i+1)*batch_size,:,[0]]
