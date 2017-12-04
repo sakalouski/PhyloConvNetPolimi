@@ -14,32 +14,8 @@
 # In[1]:
 
 
-import pandas as pd
-import gmql as gl
-import random
-import os
-import sys
-from sklearn.decomposition import PCA
-from sklearn.preprocessing import StandardScaler,MinMaxScaler
-from sklearn.metrics import confusion_matrix
-from sklearn.metrics import classification_report
-from sklearn.metrics import accuracy_score, f1_score
-from sklearn.metrics import recall_score
-from sklearn.metrics import precision_recall_fscore_support
-from sklearn.model_selection import train_test_split
-from sklearn.neighbors import KNeighborsClassifier
-
-from sklearn.feature_selection import SelectKBest
-from sklearn.feature_selection import chi2
-from sklearn.neighbors import DistanceMetric
-from sklearn.svm import SVC
-from sklearn.tree import DecisionTreeClassifier
-
-import numpy as np
 # matplotlib properties
-import matplotlib.pyplot as plt
 import matplotlib
-import seaborn as sns
 
 matplotlib.rcParams['figure.figsize'] = (20.0, 10.0)
 matplotlib.rcParams['font.size'] = 22
@@ -48,7 +24,7 @@ matplotlib.rcParams['ytick.labelsize'] = 22
 matplotlib.rcParams['axes.labelsize'] = 30
 matplotlib.rcParams['axes.titlesize'] = 30
 
-from data_proc_dm_generation import *
+from PconvNetPolimi.data_proc_dm_generation import *
 
 
 # # rpy2 module allows on usage of R inside of python
@@ -56,8 +32,6 @@ from data_proc_dm_generation import *
 # In[3]:
 
 
-import rpy2
-import rpy2.robjects as robjects
 from rpy2.robjects.packages import importr
 import rpy2.robjects.numpy2ri
 rpy2.robjects.numpy2ri.activate()
