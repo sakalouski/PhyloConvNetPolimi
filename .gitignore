@@ -175,4 +175,4 @@ venv.bak/
 
 # USER DEFINED
 .idea/      # Pycharm stuff
-data/       # data folder
+# data/       # data folder
