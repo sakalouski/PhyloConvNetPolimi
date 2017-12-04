@@ -14,12 +14,10 @@ Experiment 1:
 
 # Progressing:
 
-1. Train the network for the TADs distance matrice for all the genes, which are assigned to any tad. 
-2. Train same set of genes as in 1., but with performance, 1 iteration distance matrice.
+1. Train the network for the TADs distance matrix for all the genes, which are assigned to any tad.
+2. Train same set of genes as in 1., but with performance, 1 iteration distance matrix.
+3. The classes are balanced now
 
-# To do list:
+# Update:
 
-1. Control the training batches
-2. Do classes balancing
-3. Change the decision trees to Random Forests
-
+New TCGA data is coming...
