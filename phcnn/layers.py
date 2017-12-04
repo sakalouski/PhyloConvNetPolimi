@@ -192,7 +192,7 @@ def _top_k(dist, k):
     out._keras_shape = (dist_shape[1], k, dist_shape[2])
     return out
 
-
+#TODO: Implement instruments for weights tracing and analysis
 class PhyloConv1D(Conv1D):
     """1D phylo convolution layer
 
