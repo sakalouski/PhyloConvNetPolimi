@@ -24,7 +24,7 @@ matplotlib.rcParams['ytick.labelsize'] = 22
 matplotlib.rcParams['axes.labelsize'] = 30
 matplotlib.rcParams['axes.titlesize'] = 30
 
-from PconvNetPolimi.data_proc_dm_generation import *
+from PconvNetPolimi.data_proc_dm_generation_old import *
 
 
 # # rpy2 module allows on usage of R inside of python
