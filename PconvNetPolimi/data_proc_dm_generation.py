@@ -520,7 +520,7 @@ def create_conv_model(X_train, Y_train, MDSmat, nb_filters, nb_neighbors, opt=No
     #nb_coordinates = MDSmat.shape[1]
 
     data = Input(shape=(nb_features, 1), name="data", dtype=floatx())
-    conv_layer = keras.layers.Conv1D(nb_neighbors, nb_filters, activation='selu')(data)
+    conv_layer = keras.layers.Conv1D(nb_neighbors, nb_filters, activation='selu',strides = nb_neighbors)(data)
     flatt = Flatten()(conv_layer)
     drop = Dense(units=128, activation='selu')(flatt)
     drop = BatchNormalization()(drop)
