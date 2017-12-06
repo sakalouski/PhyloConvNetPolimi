@@ -5,7 +5,7 @@ setup(name='PconvNetPolimi',
       description='Generation and investigation of gene distance matrices',
       author='Luca Nanni, Artur Sakalouski',
       packages=find_packages(exclude=("tests", "data", "scripts")),
-      install_requires=['numpy', 'pandas', 'sklearn', 'imblearn', 'keras', 'tensorflow'],
+      install_requires=['numpy', 'pandas', 'sklearn', 'imblearn', 'keras', 'tensorflow', gene4cancer],
       classifiers=[
             'Development Status :: 3 - Alpha',
             'Intended Audience :: Science/Research',

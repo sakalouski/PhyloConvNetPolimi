@@ -87,6 +87,18 @@ def get_raw_data(tcga_path, top_k, tads=True):
 
         return X_train, X_test, Y_train, Y_test, top_inds_to_use
 
+def str_to_int(Y):
+    list_of_tissues = []
+    for i in range(Y.shape[0]):
+        e = Y[i]
+        if e in list_of_tissues:
+            Y[i] = list_of_tissues.index(e)
+        else:
+            list_of_tissues.append(e)
+            Y[i] = list_of_tissues.index(e)
+    return Y
+
+
 
 def GenerateXY(patients, pat_tissue):
     '''
@@ -505,7 +517,7 @@ def create_conv_model(X_train, Y_train, MDSmat, nb_filters, nb_neighbors, opt=No
         model - compiled model
     '''
     nb_features = X_train.shape[1]
-    nb_coordinates = MDSmat.shape[1]
+    #nb_coordinates = MDSmat.shape[1]
 
     data = Input(shape=(nb_features, 1), name="data", dtype=floatx())
     conv_layer = keras.layers.Conv1D(nb_neighbors, nb_filters, activation='selu')(data)
@@ -651,8 +663,8 @@ def train_model(model, X_train_inp, Y_input_train, batch_size, pat_lr, pat_max, 
         model - trained model with the lowest val loss achieved
     '''
     epoch = 0
-    MDSmat = get_mds(MDSmat_multi)
-    MDSmat_cv = np.zeros((X_cv.shape[0], MDSmat.shape[1], MDSmat.shape[2], MDSmat.shape[3]), float)
+    #MDSmat = get_mds(MDSmat_multi)
+    #MDSmat_cv = np.zeros((X_cv.shape[0], MDSmat.shape[1], MDSmat.shape[2], MDSmat.shape[3]), float)
     weights = get_class_weights(Y_input_train)
     pat = 0
     pat_lr_it = 0
