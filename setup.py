@@ -1,11 +1,11 @@
 from setuptools import setup, find_packages
 
-setup(name='PConvNetPolimi',
+setup(name='PconvNetPolimi',
       version="0.0.1",
-      description='Generation and ivnestigation of gene distance matrices',
+      description='Generation and investigation of gene distance matrices',
       author='Luca Nanni, Artur Sakalouski',
-      packages=find_packages(exclude=("tests", "data")),
-      install_requires=['numpy', 'pandas', 'sklearn', 'imblearn'],
+      packages=find_packages(exclude=("tests", "data", "scripts")),
+      install_requires=['numpy', 'pandas', 'sklearn', 'imblearn', 'keras', 'tensorflow'],
       classifiers=[
             'Development Status :: 3 - Alpha',
             'Intended Audience :: Science/Research',

@@ -3,21 +3,16 @@ import gmql as gl
 import random
 import os
 import sys
-from sklearn.decomposition import PCA
 from sklearn.preprocessing import StandardScaler, MinMaxScaler
 from sklearn.metrics import confusion_matrix
 from sklearn.metrics import classification_report
-from sklearn.metrics import accuracy_score, f1_score
-from sklearn.metrics import recall_score
 from sklearn.metrics import precision_recall_fscore_support
 from sklearn.model_selection import train_test_split
-from sklearn.neighbors import KNeighborsClassifier
 
 from sklearn.preprocessing import StandardScaler
 from sklearn.feature_selection import SelectKBest
 from sklearn.feature_selection import chi2
 from sklearn.neighbors import DistanceMetric
-from sklearn.svm import SVC
 from sklearn.tree import DecisionTreeClassifier
 import scipy
 import numpy as np
@@ -33,25 +28,19 @@ config = tf.ConfigProto(device_count={'CPU': 1}, intra_op_parallelism_threads=15
 session = tf.Session(config=config)
 K.set_session(session)
 
-import keras as k
 import keras
-from keras import applications
 from keras.models import Sequential
 from keras.layers import Dropout, Flatten, Dense, BatchNormalization
 from keras.optimizers import RMSprop, Adam, SGD, Nadam
-from keras.callbacks import ModelCheckpoint, ReduceLROnPlateau, EarlyStopping
 from keras.models import Model
-from keras.layers import Input
 
 module_path = os.path.abspath(os.path.join('..'))
 if module_path not in sys.path:
     sys.path.append(module_path)
 
-from keras.layers import (Lambda, MaxPooling1D, Flatten,
-                          Dropout, Dense, Input)
 from keras.models import Model
 from keras.backend import floatx
-from phcnn.layers import PhyloConv1D, euclidean_distances
+from PconvNetPolimi.phcnn import PhyloConv1D, euclidean_distances
 from keras.utils.np_utils import to_categorical
 
 matplotlib.rcParams['figure.figsize'] = (20.0, 10.0)
@@ -67,7 +56,6 @@ seed = 7
 np.random.seed(seed)
 
 import rpy2
-import rpy2.robjects as robjects
 from rpy2.robjects.packages import importr
 import rpy2.robjects.numpy2ri
 

@@ -8,10 +8,29 @@ import scipy
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.feature_selection import SelectKBest
 from sklearn.feature_selection import chi2
-from sklearn.metrics import accuracy_score, f1_score
+from sklearn.metrics import f1_score
 from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import StandardScaler, MinMaxScaler
+from sklearn.preprocessing import StandardScaler
+from keras import backend as K
+import tensorflow as tf
 
+config = tf.ConfigProto(device_count={'CPU': 1}, intra_op_parallelism_threads=7, inter_op_parallelism_threads=1)
+session = tf.Session(config=config)
+K.set_session(session)
+
+import keras
+from keras.layers import BatchNormalization
+
+
+module_path = os.path.abspath(os.path.join('..'))
+if module_path not in sys.path:
+    sys.path.append(module_path)
+
+from keras.layers import (Lambda, Flatten,
+                          Dropout, Dense, Input)
+from keras.models import Model
+from keras.backend import floatx
+from .phcnn import PhyloConv1D, euclidean_distances
 
 # -------------------------------------------------------------------------------------------------------------------------------------
 # THE FIRST PART CONTAINS FUNCTIONS NECESSARY FOR DATA PREPROCESSING AND THE DISTANCE MATRICE GENERATION
@@ -374,32 +393,6 @@ def check_preservation_of_dims(MDSres, dist_input, subset_size):
 # -------------------------------------------------------------------------------------------------------------------------------------
 # NEXT PART CONTAINS FUNCTIONS NECESSARY FOR THE SECOND PART OF THE PIPELINE - BUILING THE NETWORK AND EVALUATING ITS PROPERTIES
 # -------------------------------------------------------------------------------------------------------------------------------------
-
-
-
-
-
-
-from keras import backend as K
-
-config = tf.ConfigProto(device_count={'CPU': 1}, intra_op_parallelism_threads=7, inter_op_parallelism_threads=1)
-session = tf.Session(config=config)
-K.set_session(session)
-
-import keras
-from keras.layers import Dropout, Flatten, Dense, BatchNormalization
-
-
-module_path = os.path.abspath(os.path.join('..'))
-if module_path not in sys.path:
-    sys.path.append(module_path)
-
-from keras.layers import (Lambda, MaxPooling1D, Flatten,
-                          Dropout, Dense, Input)
-from keras.models import Model
-from keras.backend import floatx
-from phcnn.layers import PhyloConv1D, euclidean_distances
-from keras.utils.np_utils import to_categorical
 
 
 def mds_reshape(MDSmat, batch_size):
