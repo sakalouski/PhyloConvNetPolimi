@@ -131,7 +131,7 @@ for i in range(100):
     indexes = list(np.random.randint(low=0, high=X.shape[1], size = (300)))
     X_300 = X[:,indexes]
 
-    out_scores, out_ranks, out_inds = pcnp.cluster_generator_new(X, Y, 25, 10, 7, kern_size, 7)
+    out_scores, out_ranks, out_inds = pcnp.cluster_generator_new(X_300, Y, 25, 10, 7, kern_size, 7)
     dm = pcnp.get_distance_matrix(out_scores, out_ranks, out_inds, 300)
 
 
@@ -158,7 +158,7 @@ for i in range(100):
     else:
         winner_random += 1
     print('_____________________')
-    print(score_dm-score_rand)
+    print(score_dm, score_rand)
     print('DM won vs. Random won: ', winner_dm, '/', winner_random)
 
 #32/20
