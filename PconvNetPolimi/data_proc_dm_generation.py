@@ -126,19 +126,6 @@ def GenerateXY(patients, pat_tissue):
 
 
 def run_classifier(X, Y):
-    '''
-    the input is a subset of features. The classifier is created and the score on a cv dataset is obtained. 
-    the scores are used for building a distance matrice.
-    
-    input:
-        X - numpy array 2d, features
-        Y - numpy array 1d, labels
-    output:
-        score - float. performance of the whole cluster
-        importance - numpy 1d array, importances of all the features in the cluster
-    '''
-
-
     classy = RandomForestClassifier(n_estimators=10, min_samples_split=10, min_samples_leaf=5, bootstrap=True,
                                     oob_score=False, n_jobs=10,
                                     random_state=42, class_weight='balanced')
@@ -151,21 +138,10 @@ def run_classifier(X, Y):
     return score, importance
 
 
-
-
 def index_generator(index_num, list_of_gene_indx):
-    '''
-    chooses a subset of features (from the list of indexes - list_of_gene_indx) of the index_num size 
-    input:
-        index_num - integer, length of the subset
-        list_of_gene_indx - list, indies of available genes
-    output:
-        res - list, randomly chosen subset of genes of length index_num  
-    '''
     random.shuffle(list_of_gene_indx)
     res = list(list_of_gene_indx[:index_num])
     return res
-
 
 
 def find_mutual_genes(scores, importance, subset_inds, genes_to_take, top_subs):
@@ -184,35 +160,17 @@ def find_mutual_genes(scores, importance, subset_inds, genes_to_take, top_subs):
     return res
 
 
-def cluster_generator_new(tcga_X, tcga_Y, num_iters, subset_size, k_top, genes_to_take, num_of_top_to_choose):
-    '''
-    An updated version of cluster generator. 
-    Creates a population of subsets, takes most important genes and chooses the most frequent ones from it. 
-    Assignes them to the subset and measures their performance for future distance matrix building.     
-    input: 
-        tcga_X - np array 2d. features. only training on input!
-        tcga_Y - np array 1d. labels. only training on input!
-        subset_size - integer, size of the cluster
-        num_iters - integer, number of attepts to get the optimal cluster for the considered set of features
-        k_top - number of genes chosen for the whole process
-        tads - boolean, identifies if we work with all the genes or only included into tads
-    output:
-        out_scores - list of floats. scores for all the clusters
-        out_ranks - list of lists. ranks of features inside the clusters
-        out_inds - list of lists. indices for each cluster      
-    '''
+def cluster_generator_new(tcga_X, tcga_Y, num_iters, subset_size, genes_to_take, num_of_top_to_choose):
     list_of_genes = list(range(0, tcga_X.shape[1]))
 
     top_subs = num_of_top_to_choose
-    genes_to_take = 5
 
     out_scores = []
     out_ranks = []
     out_inds = []
 
-    step = subset_size
     it = 0
-    while (len(list_of_genes) >= step):
+    while (len(list_of_genes) >= subset_size):
         it += 1
         scores = np.zeros(num_iters, float)
         importance = np.zeros((num_iters, subset_size), float)
@@ -236,13 +194,11 @@ def cluster_generator_new(tcga_X, tcga_Y, num_iters, subset_size, k_top, genes_t
         return out_scores, out_ranks, out_inds
 
     masked_X = tcga_X[:, list_of_genes]
-    score_rest, importance_rest = run_classifier(masked_X, tcga_Y)
-
-    out_scores.append(score_rest)
-    out_ranks.append(list(importance_rest))
-    out_inds.append(list(list_of_genes))
-
-    # write_to_file(score_rest, importance_rest, list_of_genes,subset_size, num_iters,k_top)
+    for i in range(0, len(list_of_genes) - 5, genes_to_take):
+        score_rest, importance_rest = run_classifier(masked_X[:, i:i + 5], tcga_Y)
+        out_scores.append(score_rest)
+        out_ranks.append(list(importance_rest))
+        out_inds.append(list(list_of_genes[i:i + 5]))
     return out_scores, out_ranks, out_inds
 
 
@@ -305,7 +261,7 @@ def cluster_generator_wrapper_subsets(tcga_X, tcga_Y, num_iters, subset_size, k_
     return out_scores, out_ranks, out_inds
 
 
-def get_distance_matrix(scores, indexes, ranks, num_feats):
+def get_distance_matrix(scores, ranks,  indexes, num_feats):
     '''
     Distances are generated as differences of performances between the clusters. 
     The inside-cluster distances are obtained from feature_importance parameter of Decision Tree. 
