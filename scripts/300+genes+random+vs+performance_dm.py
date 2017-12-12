@@ -130,9 +130,9 @@ winner_random = 0
 for i in range(100):
     indexes = list(np.random.randint(low=0, high=X.shape[1], size = (300)))
     X_300 = X[:,indexes]
-
-    out_scores, out_ranks, out_inds = pcnp.cluster_generator_new(X_300, Y, 25, 10, 7, kern_size, 7)
-    dm = pcnp.get_distance_matrix(out_scores, out_ranks, out_inds, 300)
+    Y_temp = Y.astype(str)
+    out_scores, out_ranks, out_inds = pcnp.cluster_generator_new(X_300, Y_temp, 100, 10, 7, kern_size, 7)
+    dm = pcnp.get_distance_matrix(out_scores, out_inds, out_ranks, 300)
 
 
 
@@ -145,12 +145,12 @@ for i in range(100):
     from random import shuffle
 
     X_dl = X_300[:,order]
-    score_dm = dl_test(X_dl,Y)
+    score_dm = dl_test(X_dl,Y_temp)
 
 
     shuffle(order)
     X_dl = X_300[:, order]
-    score_rand = dl_test(X_dl, Y)
+    score_rand = dl_test(X_dl, Y_temp)
 
 
     if (score_dm>score_rand):
