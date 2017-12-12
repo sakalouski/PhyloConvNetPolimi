@@ -178,11 +178,11 @@ def cluster_generator_new(tcga_X, tcga_Y, num_iters, subset_size, genes_to_take,
         for i in range(0, num_iters):
             subset_inds[i, :] = index_generator(subset_size, list_of_genes)
             masked_X = tcga_X[:, subset_inds[i, :]]
-            scores[i], importance[i, :] = run_classifier(masked_X, tcga_Y)
+            scores[i], importance[i, :] = run_classifier(masked_X, tcga_Y.astype(str))
 
         final_subset_inds = find_mutual_genes(scores, importance, subset_inds, genes_to_take, top_subs)
         masked_X = tcga_X[:, final_subset_inds]
-        final_score, final_importance = run_classifier(masked_X, tcga_Y)
+        final_score, final_importance = run_classifier(masked_X, tcga_Y.astype(str))
 
         out_scores.append(final_score)
         out_ranks.append(list(final_importance))
@@ -619,8 +619,8 @@ def train_model(model, X_train_inp, Y_input_train, batch_size, pat_lr, pat_max, 
         model - trained model with the lowest val loss achieved
     '''
     epoch = 0
-    #MDSmat = get_mds(MDSmat_multi)
-    #MDSmat_cv = np.zeros((X_cv.shape[0], MDSmat.shape[1], MDSmat.shape[2], MDSmat.shape[3]), float)
+    MDSmat = get_mds(MDSmat_multi)
+    MDSmat_cv = np.zeros((X_cv.shape[0], MDSmat.shape[1], MDSmat.shape[2], MDSmat.shape[3]), float)
     weights = get_class_weights(Y_input_train)
     pat = 0
     pat_lr_it = 0
