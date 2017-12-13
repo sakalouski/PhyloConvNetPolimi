@@ -161,6 +161,16 @@ def find_mutual_genes(scores, importance, subset_inds, genes_to_take, top_subs):
 
 
 def cluster_generator_new(tcga_X, tcga_Y, num_iters, subset_size, genes_to_take, num_of_top_to_choose):
+    """
+
+    :param tcga_X:
+    :param tcga_Y:
+    :param num_iters: number of instances in the population
+    :param subset_size: instance of the population size
+    :param genes_to_take: final cluster size - taken from the population instances
+    :param num_of_top_to_choose: number of instances chosen from the population
+    :return:
+    """
     list_of_genes = list(range(0, tcga_X.shape[1]))
 
     top_subs = num_of_top_to_choose
@@ -194,8 +204,8 @@ def cluster_generator_new(tcga_X, tcga_Y, num_iters, subset_size, genes_to_take,
         return out_scores, out_ranks, out_inds
 
     masked_X = tcga_X[:, list_of_genes]
-    for i in range(0, len(list_of_genes) - 5, genes_to_take):
-        score_rest, importance_rest = run_classifier(masked_X[:, i:i + 5], tcga_Y)
+    for i in range(0, len(list_of_genes) - genes_to_take, genes_to_take):
+        score_rest, importance_rest = run_classifier(masked_X[:, i:i + genes_to_take], tcga_Y)
         out_scores.append(score_rest)
         out_ranks.append(list(importance_rest))
         out_inds.append(list(list_of_genes[i:i + 5]))
@@ -522,15 +532,15 @@ def create_phylo_adv_model(X_train, Y_train, MDSmat, nb_filters, nb_neighbors, o
     distances = euclidean_distances(conv_crd)
     conv_layer, conv_crd = PhyloConv1D(distances, nb_neighbors,
                                        nb_filters, activation='selu')([conv_layer, conv_crd])
-    distances = euclidean_distances(conv_crd)
-    conv_layer, conv_crd = PhyloConv1D(distances, nb_neighbors,
-                                       nb_filters, activation='selu')([conv_layer, conv_crd])
+    #distances = euclidean_distances(conv_crd)
+    #conv_layer, conv_crd = PhyloConv1D(distances, nb_neighbors,
+    #                                   nb_filters, activation='selu')([conv_layer, conv_crd])
     # max = MaxPooling1D(pool_size=2, padding="valid")(conv_layer)
     flatt = Flatten()(conv_layer)
     # drop = Dropout(0.5)(flatt)
-    drop = Dense(units=128, activation='selu')(flatt)
-    drop = BatchNormalization()(drop)
-    drop = Dropout(0.45)(drop)
+    #drop = Dense(units=128, activation='selu')(flatt)
+    drop = BatchNormalization()(flatt)
+    #drop = Dropout(0.45)(drop)
     output = Dense(units=Y_train.shape[1], activation="softmax", name='output')(drop)
 
     model = Model(inputs=[data, coordinates], outputs=output)
@@ -613,8 +623,8 @@ def train_model(model, X_train_inp, Y_input_train, batch_size, pat_lr, pat_max, 
         pat_lr - integer, patience for the learning rate decrease
         pat_max - integer, early stopping patience
         model_name - string, saves the model under this name
-        MDSmat - MDS coordinates matrice
-        dense  - boolean. No input of the coordinates matrice for the fully connected network
+        MDSmat - MDS coordinates matrix
+        dense  - boolean. No input of the coordinates matrix for the fully connected network
     output:
         model - trained model with the lowest val loss achieved
     '''
@@ -625,7 +635,7 @@ def train_model(model, X_train_inp, Y_input_train, batch_size, pat_lr, pat_max, 
     pat = 0
     pat_lr_it = 0
     val_loss_prev = -1
-    lr = 1e-3
+    lr = 1e-4
     lr_decr_mult = 0.1
     val_loss = 0.0
     train_loss = 0.0
