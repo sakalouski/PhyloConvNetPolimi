@@ -271,7 +271,7 @@ def cluster_generator_wrapper_subsets(tcga_X, tcga_Y, num_iters, subset_size, k_
     return out_scores, out_ranks, out_inds
 
 
-def get_distance_matrix(scores, ranks,  indexes, num_feats):
+def get_distance_matrix(scores, ranks, indexes, num_feats):
     '''
     Distances are generated as differences of performances between the clusters. 
     The inside-cluster distances are obtained from feature_importance parameter of Decision Tree. 
