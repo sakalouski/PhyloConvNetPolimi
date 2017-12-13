@@ -21,7 +21,7 @@ idx_to_gene = pd.read_csv(idx_to_gene_path, header=None, sep="\t", index_col=0, 
 geneVsgene = ss.load_npz(matrix_path)
 gene_tss_coordinates = pd.read_csv(gene_tss_coordinates_path,
                                    sep="\t", names=['chr', 'start', 'stop', 'strand', 'name'])
-tcga = pd.read_csv(tcga_path, sep="\t", index_col=None, nrows=1)
+tcga = pd.read_csv(tcga_path, sep="\t", index_col=None)
 tcga_genes = set(tcga.columns[7:])
 hic_genes = set(idx_to_gene.values)
 genes_intersection = sorted(tcga_genes.intersection(hic_genes))
@@ -33,7 +33,12 @@ print("# gene intersection: {}".format(len(genes_intersection)))
 distance, new_gene_to_idx, new_idx_to_gene = hic_to_distance(geneVsgene, gene_to_idx,
                                                              genes_intersection, gene_tss_coordinates)
 
+# creating the training set
+ordered_genes = new_idx_to_gene.values
+X = tcga.as_matrix(ordered_genes)
+
 np.save(os.path.join(output_path, "distance_matrix"), distance)
+np.save(os.path.join(output_path, "X"), X)
 new_gene_to_idx.to_csv(os.path.join(output_path, "gene_to_idx.csv"))
 new_idx_to_gene.to_csv(os.path.join(output_path, "idx_to_gene.csv"))
 

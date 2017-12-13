@@ -7,7 +7,7 @@ def hic_to_distance(hic_matrix, gene_to_idx_hic, selected_genes, gene_coordinate
     filtered_geneVSgene = hic_matrix[filter_gene_to_idx.values, :][:, filter_gene_to_idx.values]
     filtered_gene_to_idx = pd.Series(index=filter_gene_to_idx.index, data=np.arange(filtered_geneVSgene.shape[0]))
 
-    sparsity = filtered_geneVSgene.count_nonzero() / (filtered_geneVSgene.shape[0]* filtered_geneVSgene.shape[1])
+    sparsity = filtered_geneVSgene.count_nonzero() / (filtered_geneVSgene.shape[0]*filtered_geneVSgene.shape[1])
     print("[HiC] Sparsity: {:.2f}%".format(sparsity*100))
     filtered_geneVSgene = filtered_geneVSgene.todense()
 
