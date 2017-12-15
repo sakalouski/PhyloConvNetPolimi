@@ -1,7 +1,7 @@
 from setuptools import setup, find_packages
 
 setup(name='PconvNetPolimi',
-      version="0.0.3",
+      version="0.0.4",
       description='Generation and investigation of gene distance matrices',
       author='Luca Nanni, Artur Sakalouski',
       packages=find_packages(exclude=("tests", "data", "scripts")),
