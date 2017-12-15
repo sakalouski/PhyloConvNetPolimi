@@ -1,1 +1,2 @@
-from .hic import hic_to_distance
+from .hic import *
+from .filtering import filter_distance_matrix
