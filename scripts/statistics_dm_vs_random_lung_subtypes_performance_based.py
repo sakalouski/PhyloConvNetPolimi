@@ -96,7 +96,7 @@ def dl_test(X_dl, Y, kern_size = 5):
                         batch_size=batch_size,
                         verbose=0,
                         validation_split=0.3,
-                        callbacks=[reduce_lr, checkpointer, EarlStop],
+                        callbacks=[reduce_lr, EarlStop],
                         shuffle=True)
 
     Y_pred = np.empty_like(Y_input_test)
@@ -176,7 +176,7 @@ while(gene_interator < X.shape[1]-num_of_genes):
         single_report['epochs_shuffled_dm_' + str(iterator)] = len(history.epoch)
 
     report.append(single_report)
-
+    gene_interator += num_of_genes
     print('_______________________________________')
     print(single_report)
 
